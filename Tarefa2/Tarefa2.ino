@@ -6,8 +6,8 @@
 
 #include<limits.h>
 #define LED 12
-#define leap 40
-#define tolerance 5000
+#define leap 80
+#define tolerance 500
 
 short interval = 1000;
 int lastTime = millis();
@@ -49,17 +49,18 @@ void loop() {
       released[i] = true;
       pressed[i] = false;
       if (i == 0) {
-        interval += 40;
+        interval += leap;
       }
       else {
-        interval -= 40;
+        interval -= leap;
       }
       stampRelease[i] = millis();
     }
   }
 
-  if(Serial.println(abs(stampRelease[0] - stampRelease[1])) && abs(stampRelease[0] - stampRelease[1]) <= tolerance && stampRelease[0] != INT_MIN && stampRelease[1] != INT_MIN){
+  if(abs(stampRelease[0] - stampRelease[1]) <= tolerance && stampRelease[0] != INT_MIN && stampRelease[1] != INT_MIN){
      digitalWrite(LED, LOW);
+     Serial.println(abs(stampRelease[0] - stampRelease[1]))
      Serial.println("Both pressed");
      while(true);
   }
