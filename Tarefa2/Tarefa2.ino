@@ -4,16 +4,19 @@
     Botão 1+2 (em menos de 500ms): Parar.
 */
 
-#include<limits.h>
+#include <limits.h>
+#define BUTTON1 2
+#define BUTTON2 4
 #define LED 12
-#define leap 80
-#define tolerance 500
+#define LEAP 80
+#define TOLERANCE 500
+#define INTERVAL 1000
 
-short interval = 1000;
+short interval = INTERVAL;
 int lastTime = millis();
 int currentTime;
 
-char buttons[2] = {2, 4};
+char buttons[2] = {BUTTON1, BUTTON2};
 bool pressed[2] = {false, false};
 bool released[2] = {true, true};
 int stampRelease[2] = {INT_MIN, INT_MIN};
@@ -22,7 +25,6 @@ void setup() {
 
   Serial.begin(9600);
 
-  // put your setup code here, to run once:
   for (int i = 0; i < 2; i++) {
     pinMode(buttons[i], INPUT);
   }
@@ -31,10 +33,6 @@ void setup() {
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-
-  //Serial.println(interval);
-
 
   for (int i = 0; i < 2; i++) {
     
@@ -44,27 +42,30 @@ void loop() {
       pressed[i] = true;
     }
 
-    //Checks if the buttoni was released.
+    //Checks if the buttoni was released and makes the action happen.
     if ( digitalRead(buttons[i]) == HIGH && pressed[i] == true) {
       released[i] = true;
       pressed[i] = false;
       if (i == 0) {
-        interval += leap;
+        interval += LEAP;
       }
       else {
-        interval -= leap;
+        interval -= LEAP;
       }
       stampRelease[i] = millis();
     }
   }
 
-  if(abs(stampRelease[0] - stampRelease[1]) <= tolerance && stampRelease[0] != INT_MIN && stampRelease[1] != INT_MIN){
+  //Checks if the buttons were pressed at the same time.
+  if(abs(stampRelease[0] - stampRelease[1]) <= TOLERANCE && stampRelease[0] != INT_MIN && stampRelease[1] != INT_MIN){
      digitalWrite(LED, LOW);
-     Serial.println(abs(stampRelease[0] - stampRelease[1]))
+     Serial.println(abs(stampRelease[0] - stampRelease[1]));
      Serial.println("Both pressed");
      while(true);
   }
 
+
+  //Makes the led blink.
   currentTime = millis();
   if (currentTime >= lastTime + interval) {
     lastTime = currentTime;
