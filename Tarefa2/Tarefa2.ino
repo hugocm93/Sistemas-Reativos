@@ -16,7 +16,7 @@ int currentTime;
 char buttons[2] = {2, 4};
 bool pressed[2] = {false, false};
 bool released[2] = {true, true};
-int stampRelease[2];
+int stampRelease[2] = {INT_MIN, INT_MIN};
 
 void setup() {
 
@@ -33,7 +33,7 @@ void setup() {
 void loop() {
   // put your main code here, to run repeatedly:
 
-  Serial.println(interval);
+  //Serial.println(interval);
 
 
   for (int i = 0; i < 2; i++) {
@@ -42,28 +42,23 @@ void loop() {
     if ( digitalRead(buttons[i]) == LOW) {
       released[i] = false;
       pressed[i] = true;
-
-      stampRelease[i] = INT_MIN;
-
     }
 
     //Checks if the buttoni was released.
     if ( digitalRead(buttons[i]) == HIGH && pressed[i] == true) {
       released[i] = true;
       pressed[i] = false;
-
       if (i == 0) {
         interval += 40;
       }
       else {
         interval -= 40;
       }
-
       stampRelease[i] = millis();
     }
   }
 
-  if((pressed[0] == pressed[1] && pressed[0] == true) || (pressed[0] != pressed[1] && abs(stampRelease[0] - stampRelease[1]) <= tolerance)){
+  if(Serial.println(abs(stampRelease[0] - stampRelease[1])) && abs(stampRelease[0] - stampRelease[1]) <= tolerance && stampRelease[0] != INT_MIN && stampRelease[1] != INT_MIN){
      digitalWrite(LED, LOW);
      Serial.println("Both pressed");
      while(true);
