@@ -7,7 +7,7 @@
 #include <limits.h>
 #define BUTTON1 2
 #define BUTTON2 4
-#define LED 12
+#define LED 13
 #define LEAP 80
 #define TOLERANCE 500
 #define INTERVAL 1000
