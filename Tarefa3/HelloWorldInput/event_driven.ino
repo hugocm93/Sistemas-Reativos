@@ -1,4 +1,5 @@
 #include "event_driven.h"
+#include <limits.h>
 
 #define BUTMAX 13
 #define TIMEMAX 2
@@ -9,6 +10,7 @@ char nButtons;
 
 int timerValue[TIMEMAX];
 unsigned long timerSet[TIMEMAX];
+bool expired[TIMEMAX];
 
 void button_listen (int pin) {
   if (nButtons == BUTMAX) {
@@ -27,12 +29,12 @@ void timer_set (int timerNumber, int ms) {
   }
   timerValue[timerNumber - 1] = ms;
   timerSet[timerNumber - 1] = millis();
+  expired[timerNumber - 1] = false;
 }
 
 
 void setup() {
   nButtons = 0;
-
   for (int i = 0; i < BUTMAX; i++) {
     lastState[i] = HIGH;
   }
@@ -56,8 +58,8 @@ void loop() {
   }
 
   for (int j = 0; j < TIMEMAX; j++) {
-    if (millis() - timerSet[j] >= timerValue[j] && timerValue[j] > 0) {
-      timerValue[j] = -1;
+    if (millis() - timerSet[j] >= timerValue[j] && !expired[j]) {
+      expired[j] = true;
       timer_expired(j + 1);
     }
   }
