@@ -3,7 +3,8 @@
   empilhados. Quanto mais quente,
   mais leds acendem*/
 
- /*Material consultado sobre charlieplexing: http://www.instructables.com/id/Charlieplexing-the-Arduino/*/
+ /*Material consultado sobre charlieplexing: 
+ http://www.instructables.com/id/Charlieplexing-the-Arduino/*/
 
 /*Pinos para fazer o charlieplexing
 (Acender 6 Leds com apenas 3 portas digitais)*/
@@ -13,6 +14,11 @@
 
 /*Porta analógica que lê o sensor de temperatura*/
 #define SENSOR A0
+
+/*Controle para verificar temperatura de 3 em 3 segundos*/
+#define INTERVAL 3000
+unsigned long lastTime = millis();
+int oldValue = analogRead(SENSOR);
 
 
 /*Funções auxiliares para fazer o charlieplexing.
@@ -33,16 +39,23 @@ void setup() {
 }
 
 void loop() {
-  int sensorValue = analogRead(SENSOR);
-  //Serial.println(sensorValue);
+  /*Somente atualiza de 3 em 3 segundos*/
+  int sensorValue = oldValue;
+  if(millis() >= lastTime + INTERVAL){
+    sensorValue = analogRead(SENSOR);
+    //Serial.println(sensorValue);
+
+    lastTime = millis();
+    oldValue = sensorValue;
+  }
 
   /*Mapeia o valor lido para acender uma quantidade 
-  específica de leds. Os parâmetros 30 e 40 são empíricos
+  específica de leds. Os parâmetros 60 e 70 são empíricos
   e foram escolhidos de modo a permitir a visualização dos
   leds com uma pequena variação de temperatura. Não foi feita
   nenhuma conversão para apresentar a temperatura em uma 
   unidade de medida padronizada.*/
-  int numberOfLeds = map(sensorValue, 30, 40, 1, 6);
+  int numberOfLeds = map(sensorValue, 60, 70, 1, 6);
 
 
   /*Acende uma quantidade de leds proporcional à temperatura lida. 
