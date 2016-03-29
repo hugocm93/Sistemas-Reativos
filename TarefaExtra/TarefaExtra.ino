@@ -17,6 +17,8 @@
 
 /*Controle para verificar temperatura de 3 em 3 segundos*/
 #define INTERVAL 3000
+#define LOWERBOUND 45
+#define UPPERBOUND 55
 unsigned long lastTime = millis();
 int oldValue = analogRead(SENSOR);
 
@@ -34,7 +36,7 @@ acender de um led. O total de arranjos é 6.*/
 void turnOnLed(int number);
 
 void setup() {
-  //Serial.begin(9600);
+  Serial.begin(9600);
   pinMode(SENSOR, INPUT);
 }
 
@@ -43,19 +45,19 @@ void loop() {
   int sensorValue = oldValue;
   if(millis() >= lastTime + INTERVAL){
     sensorValue = analogRead(SENSOR);
-    //Serial.println(sensorValue);
+    Serial.println(sensorValue);
 
     lastTime = millis();
     oldValue = sensorValue;
   }
 
   /*Mapeia o valor lido para acender uma quantidade 
-  específica de leds. Os parâmetros 60 e 70 são empíricos
+  específica de leds. Os parâmetros LOWERBOUND e UPPERBOUND são empíricos
   e foram escolhidos de modo a permitir a visualização dos
   leds com uma pequena variação de temperatura. Não foi feita
   nenhuma conversão para apresentar a temperatura em uma 
   unidade de medida padronizada.*/
-  int numberOfLeds = map(sensorValue, 60, 70, 1, 6);
+  int numberOfLeds = map(sensorValue, LOWERBOUND, UPPERBOUND, 1, 6);
 
 
   /*Acende uma quantidade de leds proporcional à temperatura lida. 
