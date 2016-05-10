@@ -1,0 +1,198 @@
+#include "sdl.ceu"
+
+
+input void SDL_REDRAW;
+input void SDL_QUIT;
+input int  SDL_DT;
+input _SDL_KeyboardEvent&& SDL_KEYDOWN;
+input _SDL_KeyboardEvent&& SDL_KEYUP;
+input _SDL_MouseButtonEvent&& SDL_MOUSEBUTTONDOWN;
+
+var _SDL_Window&? window;
+    finalize
+        window = &_SDL_CreateWindow("Jogo",
+                    _SDL_WINDOWPOS_UNDEFINED,
+                    _SDL_WINDOWPOS_UNDEFINED,
+                    640, 480, _SDL_WINDOW_SHOWN);
+    with
+        _SDL_DestroyWindow(&&window!);
+    end
+
+var _SDL_Renderer&? renderer;
+    finalize
+        renderer = &_SDL_CreateRenderer(&&window!, -1, 0);
+    with
+        _SDL_DestroyRenderer(&&renderer!);
+    end
+
+native do
+    SDL_Renderer* REN = NULL;
+    ##define ID(x) x
+end
+native @pure _ID();
+
+finalize
+    _REN = _SDL_CreateRenderer(&&window!, -1, 0);
+with
+    _SDL_DestroyRenderer(_REN);
+end
+
+native do
+    SDL_Texture* TEX_UP;
+end
+    finalize
+        _TEX_UP = _IMG_LoadTexture(_REN, "up.png");
+    with
+        _SDL_DestroyTexture(_TEX_UP);
+    end
+
+class Projectile with
+    var _SDL_Renderer& ren;
+    var _SDL_Rect r;
+    var int speed;
+    event void go_collide;
+do
+    this.r.x = 200;
+    this.r.y = 200;
+    this.r.w = 50;
+    this.r.h = 45;
+
+	par/or do
+ 	     par do
+                var int y = r.y;
+                loop do
+                    var int dt = await SDL_DT;
+                    var float v = dt*speed;
+                    y = y + v/1000;
+                    r.y = y;
+                    if r.y < 0 then
+                        escape false;
+                    end
+                end
+            with
+                await this.go_collide;
+                escape true;
+            end;
+	with
+		every SDL_REDRAW do
+		   //_SDL_RenderCopy(&&this.ren, _TEX_UP, null, &&this.r);
+ 		   _SDL_SetRenderDrawColor(&&this.ren,0xDD,0xDD,0xDD,0x00);
+		   _SDL_RenderFillRect(&&this.ren, &&this.r);
+
+		end
+	end
+end
+
+class Cloud with
+    var _SDL_Renderer& ren;
+    var _SDL_Rect      r;
+    var int            vx;
+do
+    var int x = -this.r.w * 1000;
+    par do
+        every dt in SDL_DT do
+            x = x + this.vx*dt;
+            if x > 640000 then
+                x = 0;
+            end
+        end
+    with
+        every SDL_REDRAW do
+            _SDL_SetRenderDrawColor(&&this.ren,
+                                    0xDD,0xDD,0xDD,0x00);
+            this.r.x = x / 1000;
+            _SDL_RenderFillRect(&&this.ren, &&this.r);
+        end
+    end
+end
+
+class Player with
+    var _SDL_Renderer& ren;
+do
+    var int x = (640/2 - 20/2) * 1000;
+    var int y = (480-50) * 1000;
+    var int vx = 0;
+    var int vy = 0;
+
+    var _SDL_Rect r;
+    r.x = 0;
+    r.y = 0;
+    r.w = 20;
+    r.h = 50;
+
+    par do
+        every dt in SDL_DT do
+            x = x + vx*dt;
+            y = y + vy*dt;
+        end
+    with
+        par do
+            loop do
+                var _SDL_KeyboardEvent&& key;
+                key = await SDL_KEYDOWN until key:keysym.sym==_SDLK_LEFT;
+                vx = -100;
+                key = await SDL_KEYUP   until key:keysym.sym==_SDLK_LEFT;
+                vx = 0;
+            end
+        with
+            loop do
+                var _SDL_KeyboardEvent&& key;
+                key = await SDL_KEYDOWN until key:keysym.sym==_SDLK_RIGHT;
+                vx = 100;
+                key = await SDL_KEYUP   until key:keysym.sym==_SDLK_RIGHT;
+                vx = 0;
+            end
+        end
+    with
+        every SDL_REDRAW do
+            _SDL_SetRenderDrawColor(&&this.ren,
+                                    0x00,0x00,0x00,0x00);
+            r.x = x / 1000;
+            r.y = y / 1000;
+            _SDL_RenderFillRect(&&this.ren, &&r);
+        end
+    end
+end
+
+_srand(_time(null));
+
+par/or do
+    await SDL_QUIT;
+with
+    every SDL_REDRAW do
+        _SDL_SetRenderDrawColor(&&renderer!,
+                                0x00,0xF0,0xE4,0x00);
+        _SDL_RenderFillRect(&&renderer!, null);
+    end
+with
+    var Cloud[3] _ with
+        var int w = 50 + _rand()%200;
+        var int h = 20 + _rand()%50;
+        var int y = h + _rand()%200;
+        this.ren = &renderer!;
+	this.r.x = 0;
+	this.r.y = y;
+	this.r.w = w;
+	this.r.h = h;
+        this.vx  = 10 + _rand()%50;
+
+    end;
+
+    var Projectile pro with
+       this.ren = &renderer!;
+       this.speed = 10;
+    end;
+
+    var Player p with
+        this.ren = &renderer!;
+    end;
+
+    await FOREVER;
+with
+    every SDL_REDRAW do
+        _SDL_RenderPresent(&&renderer!);
+    end
+end
+
+escape 0;
+

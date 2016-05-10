@@ -1,0 +1,11 @@
+#!/bin/bash
+
+path=$(pwd)
+file=$1
+name=$path/$file
+rm $name.exe
+cd ceu-sdl
+make CEUFILE=$name.ceu
+
+cd ..
+./$file.exe
